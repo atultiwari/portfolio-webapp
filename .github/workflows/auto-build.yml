@@ -41,6 +41,7 @@ jobs:
         run: npm run build
 
       - name: Fix asset paths for GitHub Pages
+        working-directory: source
         run: |
           sed -i 's|src="/assets/|src="/portfolio-webapp/assets/|g' dist/index.html
           sed -i 's|href="/assets/|href="/portfolio-webapp/assets/|g' dist/index.html
