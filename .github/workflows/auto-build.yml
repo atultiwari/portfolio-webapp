@@ -1,6 +1,12 @@
 # .github/workflows/auto-build.yml
 name: VRL Bootcamp by Dr. Atul Tiwari
 
+# CHANGE ONLY THESE VALUES
+env:
+  AI_SOURCE_REPO: atultiwari/portfolio-atultiwari
+  PAGES_REPO_NAME: portfolio-webapp
+# DO NOT TOUCH ANYTHING BELOW
+
 on:
   workflow_dispatch:
   push:
@@ -18,7 +24,7 @@ jobs:
       - name: Checkout AI source repo
         uses: actions/checkout@v4
         with:
-          repository: atultiwari/portfolio-atultiwari
+          repository: ${{ env.AI_SOURCE_REPO }}
           ref: main
           path: source
 
@@ -43,10 +49,10 @@ jobs:
       - name: Fix asset paths for GitHub Pages
         working-directory: source
         run: |
-          sed -i 's|src="/assets/|src="/portfolio-webapp/assets/|g' dist/index.html
-          sed -i 's|href="/assets/|href="/portfolio-webapp/assets/|g' dist/index.html
+          sed -i "s|src=\"/assets/|src=\"/${PAGES_REPO_NAME}/assets/|g" dist/index.html
+          sed -i "s|href=\"/assets/|href=\"/${PAGES_REPO_NAME}/assets/|g" dist/index.html
 
-      - name: Deploy to Pages
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
