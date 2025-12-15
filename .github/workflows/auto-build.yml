@@ -1,0 +1,48 @@
+# .github/workflows/auto-build.yml
+name: VRL Bootcamp by Dr. Atul Tiwari
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout AI source repo
+        uses: actions/checkout@v4
+        with:
+          repository: atultiwari/portfolio-atultiwari
+          ref: main
+          path: source
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install deps
+        working-directory: source
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build app
+        working-directory: source
+        run: npm run build
+
+      - name: Deploy to Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: source/dist
+          publish_branch: deploy
