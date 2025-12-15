@@ -40,6 +40,11 @@ jobs:
         working-directory: source
         run: npm run build
 
+      - name: Fix asset paths for GitHub Pages
+        run: |
+          sed -i 's|src="/assets/|src="/portfolio-webapp/assets/|g' dist/index.html
+          sed -i 's|href="/assets/|href="/portfolio-webapp/assets/|g' dist/index.html
+
       - name: Deploy to Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
