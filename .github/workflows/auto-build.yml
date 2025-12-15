@@ -2,10 +2,9 @@
 name: VRL Bootcamp by Dr. Atul Tiwari
 
 on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -22,12 +21,33 @@ jobs:
           ref: main
           path: source
 
+      - name: Check last build commit
+        id: commitcheck
+        run: |
+          cd source
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Load last built commit
+        id: lastcommit
+        run: |
+          if [ -f last-built.txt ]; then
+            echo "last=$(cat last-built.txt)" >> $GITHUB_OUTPUT
+          else
+            echo "last=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Skip if no changes
+        if: steps.commitcheck.outputs.commit == steps.lastcommit.outputs.last
+        run: echo "No changes since last build. Skipping."
+
       - name: Setup Node
+        if: steps.commitcheck.outputs.commit != steps.lastcommit.outputs.last
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
       - name: Install deps
+        if: steps.commitcheck.outputs.commit != steps.lastcommit.outputs.last
         working-directory: source
         run: |
           if [ -f package-lock.json ]; then
@@ -37,12 +57,22 @@ jobs:
           fi
 
       - name: Build app
+        if: steps.commitcheck.outputs.commit != steps.lastcommit.outputs.last
         working-directory: source
         run: npm run build
 
       - name: Deploy to Pages
+        if: steps.commitcheck.outputs.commit != steps.lastcommit.outputs.last
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: source/dist
           publish_branch: deploy
+
+      - name: Save last built commit
+        if: steps.commitcheck.outputs.commit != steps.lastcommit.outputs.last
+        run: |
+          echo "${{ steps.commitcheck.outputs.commit }}" > last-built.txt
+          git add last-built.txt
+          git commit -m "chore: record last built commit"
+          git push
